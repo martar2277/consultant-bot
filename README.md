@@ -18,7 +18,8 @@ An AI-powered chatbot demonstrating consultation capabilities in youth work and 
 ├── styles.css          # Responsive styling
 ├── script.js           # Frontend logic
 ├── api/
-│   └── chat.js        # Serverless function for OpenAI proxy
+│   ├── chat.js        # Serverless function for OpenAI proxy
+│   └── download-logs.js # Endpoint to download conversation logs
 ├── package.json        # Dependencies
 ├── vercel.json         # Vercel configuration
 └── README.md          # This file
@@ -61,16 +62,27 @@ npm run dev
 vercel login
 ```
 
-2. Set up environment variable:
+2. Set up environment variables:
 ```bash
 vercel env add OPENAI_API_KEY
+vercel env add DOWNLOAD_SECRET
 ```
-(Paste your OpenAI API key when prompted)
+(Paste your OpenAI API key and a secret password for downloading logs when prompted)
 
 3. Deploy:
 ```bash
 vercel --prod
 ```
+
+**Alternative: Deploy via Vercel Web Dashboard**
+
+1. Go to https://vercel.com and sign in
+2. Click "Add New Project"
+3. Import GitHub repository: `martar2277/consultant-bot`
+4. Add environment variables:
+   - `OPENAI_API_KEY`: Your OpenAI API key
+   - `DOWNLOAD_SECRET`: A secret password for downloading logs
+5. Click "Deploy"
 
 ### Using with GitHub Pages
 
@@ -116,7 +128,23 @@ Conversations are logged to `/tmp/chat_logs.json` on Vercel's serverless infrast
 - User message
 - Bot response
 
-**Note:** Vercel's `/tmp` directory is ephemeral. For persistent logging, integrate a database (Vercel KV, MongoDB, etc.).
+**Note:** Vercel's `/tmp` directory is ephemeral and files may be cleared periodically.
+
+### Downloading Conversation Logs
+
+To download all conversation logs, visit:
+
+```
+https://your-app.vercel.app/api/download-logs?secret=YOUR_DOWNLOAD_SECRET
+```
+
+Replace:
+- `your-app.vercel.app` with your actual Vercel deployment URL
+- `YOUR_DOWNLOAD_SECRET` with the secret you set in environment variables
+
+This will download a JSON file containing all logged conversations. **Recommended frequency:** Download weekly or after significant traffic.
+
+**Security:** The download endpoint is protected by the `DOWNLOAD_SECRET` environment variable to prevent unauthorized access to conversation data.
 
 ## How It Works
 
