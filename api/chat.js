@@ -4,6 +4,8 @@ import { put, head } from '@vercel/blob';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const BLOB_STORAGE_URL = 'chat_logs.json';
 
+// Blob storage enabled - persistent logging across all serverless instances
+
 // System prompt that guides the conversation
 const SYSTEM_PROMPT = `You are an AI consultation assistant specializing in youth work and youth policy. Your role is to provide valuable insights while naturally gathering information about the user's context.
 
