@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Consultation Demo - Youth Work & Youth Policy</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="chat-wrapper">
+            <!-- Header with profile -->
+            <div class="chat-header">
+                <div class="profile-section">
+                    <img src="profile.jpg" alt="Consultant Profile" class="profile-image">
+                    <div class="profile-info">
+                        <h1>AI-Powered Consultation Demo</h1>
+                        <p>Youth Work & Youth Policy</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat messages area -->
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    <div class="message-content">
+                        Hello! I'm an AI-powered consultation demo. I'm here to give you a taste of how consultation in youth work and youth policy can help. Feel free to ask me about challenges you're facing, best practices, or strategic approaches. What brings you here today?
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input area -->
+            <div class="chat-input-wrapper">
+                <div class="chat-input">
+                    <textarea
+                        id="userInput"
+                        placeholder="Type your message here..."
+                        rows="1"
+                    ></textarea>
+                    <button id="sendButton" class="send-button">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+                <div class="question-counter" id="questionCounter">
+                    Questions remaining: <span id="questionsLeft">5</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
