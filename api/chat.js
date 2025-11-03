@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { put, head } from '@vercel/blob';
+import { put, list } from '@vercel/blob';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const BLOB_STORAGE_URL = 'chat_logs.json';
@@ -105,14 +105,19 @@ async function logInteraction(logEntry) {
 
         // Try to fetch existing logs from Blob storage
         try {
-            const response = await fetch(`${process.env.BLOB_READ_WRITE_TOKEN ? 'https://blob.vercel-storage.com/' + BLOB_STORAGE_URL : ''}`);
-            if (response.ok) {
-                const existingData = await response.json();
-                logs = existingData;
-                console.log(`Found ${logs.length} existing logs in Blob storage`);
+            const { blobs } = await list();
+            const logBlob = blobs.find(blob => blob.pathname === BLOB_STORAGE_URL);
+
+            if (logBlob) {
+                const response = await fetch(logBlob.url);
+                if (response.ok) {
+                    const existingData = await response.json();
+                    logs = existingData;
+                    console.log(`Found ${logs.length} existing logs in Blob storage`);
+                }
             }
         } catch (readError) {
-            console.log('No existing logs found, starting fresh');
+            console.log('No existing logs found, starting fresh:', readError.message);
         }
 
         // Append new log entry
