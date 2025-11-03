@@ -103,11 +103,15 @@ async function logInteraction(logEntry) {
         let logs = [];
 
         // Read existing logs if file exists
-        if (fs.existsSync(LOG_FILE)) {
-            const fileContent = fs.readFileSync(LOG_FILE, 'utf8');
-            if (fileContent.trim()) {
-                logs = JSON.parse(fileContent);
+        try {
+            if (fs.existsSync(LOG_FILE)) {
+                const fileContent = fs.readFileSync(LOG_FILE, 'utf8');
+                if (fileContent.trim()) {
+                    logs = JSON.parse(fileContent);
+                }
             }
+        } catch (readError) {
+            console.log('Could not read existing logs, starting fresh:', readError.message);
         }
 
         // Append new log entry
@@ -115,6 +119,8 @@ async function logInteraction(logEntry) {
 
         // Write back to file
         fs.writeFileSync(LOG_FILE, JSON.stringify(logs, null, 2));
+
+        console.log(`Logged interaction for session ${logEntry.sessionId}, total logs: ${logs.length}`);
     } catch (error) {
         console.error('Error logging interaction:', error);
         // Don't throw - logging failure shouldn't break the chat
