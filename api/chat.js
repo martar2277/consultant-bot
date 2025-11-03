@@ -101,35 +101,17 @@ export default async function handler(req, res) {
 
 async function logInteraction(logEntry) {
     try {
-        let logs = [];
+        // Create a unique filename for each interaction to avoid race conditions
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `logs/${logEntry.sessionId}_${timestamp}.json`;
 
-        // Try to fetch existing logs from Blob storage
-        try {
-            const { blobs } = await list();
-            const logBlob = blobs.find(blob => blob.pathname === BLOB_STORAGE_URL);
-
-            if (logBlob) {
-                const response = await fetch(logBlob.url);
-                if (response.ok) {
-                    const existingData = await response.json();
-                    logs = existingData;
-                    console.log(`Found ${logs.length} existing logs in Blob storage`);
-                }
-            }
-        } catch (readError) {
-            console.log('No existing logs found, starting fresh:', readError.message);
-        }
-
-        // Append new log entry
-        logs.push(logEntry);
-
-        // Upload updated logs to Blob storage
-        const blob = await put(BLOB_STORAGE_URL, JSON.stringify(logs, null, 2), {
+        // Store individual log entry
+        const blob = await put(filename, JSON.stringify(logEntry, null, 2), {
             access: 'public',
             contentType: 'application/json',
         });
 
-        console.log(`Logged interaction for session ${logEntry.sessionId}, total logs: ${logs.length}, blob URL: ${blob.url}`);
+        console.log(`Logged interaction: ${filename}, blob URL: ${blob.url}`);
     } catch (error) {
         console.error('Error logging interaction:', error);
         // Don't throw - logging failure shouldn't break the chat

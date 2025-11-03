@@ -13,12 +13,11 @@ export default async function handler(req, res) {
     }
 
     try {
-        // List all blobs to find our log file
-        const { blobs } = await list();
-        const logBlob = blobs.find(blob => blob.pathname === BLOB_STORAGE_URL);
+        // List all blobs in the logs/ directory
+        const { blobs } = await list({ prefix: 'logs/' });
 
-        if (!logBlob) {
-            console.log('No log blob found yet');
+        if (blobs.length === 0) {
+            console.log('No log blobs found yet');
             return res.status(200).json({
                 message: 'No logs found yet. This is normal if no conversations have happened since Blob storage was enabled.',
                 logs: [],
@@ -27,13 +26,25 @@ export default async function handler(req, res) {
             });
         }
 
-        // Fetch the blob content
-        const response = await fetch(logBlob.url);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch blob: ${response.statusText}`);
+        console.log(`Found ${blobs.length} log files`);
+
+        // Fetch and combine all log entries
+        const logs = [];
+        for (const blob of blobs) {
+            try {
+                const response = await fetch(blob.url);
+                if (response.ok) {
+                    const logEntry = await response.json();
+                    logs.push(logEntry);
+                }
+            } catch (err) {
+                console.error(`Failed to fetch log ${blob.pathname}:`, err.message);
+            }
         }
 
-        const logs = await response.json();
+        // Sort by timestamp
+        logs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
         console.log(`Successfully read ${logs.length} log entries from Blob storage`);
 
         // Return as downloadable JSON file
