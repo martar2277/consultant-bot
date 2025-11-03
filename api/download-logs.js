@@ -1,6 +1,7 @@
-import fs from 'fs';
+import { list } from '@vercel/blob';
+import fetch from 'node-fetch';
 
-const LOG_FILE = '/tmp/chat_logs.json';
+const BLOB_STORAGE_URL = 'chat_logs.json';
 
 export default async function handler(req, res) {
     // Simple authentication - add a secret query parameter
@@ -12,34 +13,28 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Check if log file exists
-        const fileExists = fs.existsSync(LOG_FILE);
-        console.log(`Log file exists: ${fileExists}, path: ${LOG_FILE}`);
+        // List all blobs to find our log file
+        const { blobs } = await list();
+        const logBlob = blobs.find(blob => blob.pathname === BLOB_STORAGE_URL);
 
-        if (!fileExists) {
-            // List what's in /tmp to debug
-            try {
-                const tmpFiles = fs.readdirSync('/tmp');
-                console.log('Files in /tmp:', tmpFiles);
-            } catch (e) {
-                console.log('Could not list /tmp:', e.message);
-            }
-
+        if (!logBlob) {
+            console.log('No log blob found yet');
             return res.status(200).json({
-                message: 'No logs found yet - file does not exist. This is normal if no conversations have happened yet, or if this serverless instance has not processed any chats.',
+                message: 'No logs found yet. This is normal if no conversations have happened since Blob storage was enabled.',
                 logs: [],
-                debug: {
-                    logFilePath: LOG_FILE,
-                    tmpAccessible: true
-                }
+                downloadedAt: new Date().toISOString(),
+                totalConversations: 0
             });
         }
 
-        // Read logs
-        const fileContent = fs.readFileSync(LOG_FILE, 'utf8');
-        const logs = fileContent.trim() ? JSON.parse(fileContent) : [];
+        // Fetch the blob content
+        const response = await fetch(logBlob.url);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch blob: ${response.statusText}`);
+        }
 
-        console.log(`Successfully read ${logs.length} log entries`);
+        const logs = await response.json();
+        console.log(`Successfully read ${logs.length} log entries from Blob storage`);
 
         // Return as downloadable JSON file
         res.setHeader('Content-Type', 'application/json');

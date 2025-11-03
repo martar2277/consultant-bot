@@ -1,9 +1,8 @@
 import fetch from 'node-fetch';
-import fs from 'fs';
-import path from 'path';
+import { put, head } from '@vercel/blob';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const LOG_FILE = '/tmp/chat_logs.json';
+const BLOB_STORAGE_URL = 'chat_logs.json';
 
 // System prompt that guides the conversation
 const SYSTEM_PROMPT = `You are an AI consultation assistant specializing in youth work and youth policy. Your role is to provide valuable insights while naturally gathering information about the user's context.
@@ -102,25 +101,28 @@ async function logInteraction(logEntry) {
     try {
         let logs = [];
 
-        // Read existing logs if file exists
+        // Try to fetch existing logs from Blob storage
         try {
-            if (fs.existsSync(LOG_FILE)) {
-                const fileContent = fs.readFileSync(LOG_FILE, 'utf8');
-                if (fileContent.trim()) {
-                    logs = JSON.parse(fileContent);
-                }
+            const response = await fetch(`${process.env.BLOB_READ_WRITE_TOKEN ? 'https://blob.vercel-storage.com/' + BLOB_STORAGE_URL : ''}`);
+            if (response.ok) {
+                const existingData = await response.json();
+                logs = existingData;
+                console.log(`Found ${logs.length} existing logs in Blob storage`);
             }
         } catch (readError) {
-            console.log('Could not read existing logs, starting fresh:', readError.message);
+            console.log('No existing logs found, starting fresh');
         }
 
         // Append new log entry
         logs.push(logEntry);
 
-        // Write back to file
-        fs.writeFileSync(LOG_FILE, JSON.stringify(logs, null, 2));
+        // Upload updated logs to Blob storage
+        const blob = await put(BLOB_STORAGE_URL, JSON.stringify(logs, null, 2), {
+            access: 'public',
+            contentType: 'application/json',
+        });
 
-        console.log(`Logged interaction for session ${logEntry.sessionId}, total logs: ${logs.length}`);
+        console.log(`Logged interaction for session ${logEntry.sessionId}, total logs: ${logs.length}, blob URL: ${blob.url}`);
     } catch (error) {
         console.error('Error logging interaction:', error);
         // Don't throw - logging failure shouldn't break the chat
